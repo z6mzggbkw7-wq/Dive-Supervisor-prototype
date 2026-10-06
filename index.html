@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e3b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dive Board">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>Dive supervisor board (prototype)</title>
+<style>
+:root{--bg:#e6ecee;--card:#fff;--ink:#0e2838;--mute:#566b78;--line:#c3d0d6;--btn:#0e3b52;--btnink:#fff;--warn:#b8400c;--bar:#fff3cf;--barink:#5a3b00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a23;--card:#13293a;--ink:#e6f0f4;--mute:#92a9b6;--line:#26425a;--btn:#e6f0f4;--btnink:#0b1a23;--warn:#ff8a50;--bar:#4a3a10;--barink:#ffe9a8}}
+:root[data-theme="dark"]{--bg:#0b1a23;--card:#13293a;--ink:#e6f0f4;--mute:#92a9b6;--line:#26425a;--btn:#e6f0f4;--btnink:#0b1a23;--warn:#ff8a50;--bar:#4a3a10;--barink:#ffe9a8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:680px;margin:0 auto;padding:12px}
+.bar{background:var(--bar);color:var(--barink);padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;min-height:48px;font-size:18px;background:var(--card);color:var(--ink);border:2px solid var(--line)}
+.tabs button.on{background:var(--btn);color:var(--btnink);border-color:var(--btn)}
+h3{font-size:16px;margin:16px 0 4px;color:var(--mute)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card.alert{border-color:var(--warn)}
+.top{display:flex;justify-content:space-between;align-items:baseline}
+.name{font-weight:700;font-size:22px}
+.st{color:var(--mute)}
+.clock{font-weight:700;font-size:64px;line-height:1.05;font-variant-numeric:tabular-nums;margin:4px 0}
+.alert .clock{color:var(--warn)}
+.lbl{color:var(--mute);font-size:15px}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.depth{display:flex;align-items:center;gap:8px;margin-left:auto}
+.depth b{font-size:24px;min-width:64px;text-align:center}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.step{width:48px;height:48px;font-size:26px;background:var(--line);color:var(--ink)}
+.step:disabled{opacity:.35}
+.go{width:100%;min-height:68px;font-size:24px;background:var(--btn);color:var(--btnink)}
+.go:disabled{opacity:.4}
+.sm{padding:10px 14px;background:var(--line);color:var(--ink);font-size:16px;margin:4px 6px 4px 0}
+.undo{background:none;color:var(--mute);text-decoration:underline;font-size:15px;padding:10px 0}
+.info{font-size:16px}
+label{display:block;margin:6px 0;font-size:15px;color:var(--mute)}
+input,textarea,select{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.chk{display:flex;gap:10px;align-items:center}.chk input{width:24px;height:24px}
+.log{font-size:14px;color:var(--mute);max-height:150px;overflow:auto}
+.sc{overflow-x:auto;margin-bottom:12px}
+table{border-collapse:collapse;font-size:14px;width:100%}
+td,th{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top;background:var(--card)}
+th{background:var(--bg)}
+.p2 td:first-child,.p2 th:first-child{position:sticky;left:0;font-weight:700;min-width:120px}
+.p2 td{min-width:84px}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}.dlg>div{background:var(--card);border-radius:12px;padding:16px;max-width:360px;width:100%}.dlg p{margin:0 0 12px;font-size:18px}.dlg button{min-height:48px;padding:0 18px;margin-right:8px;font-size:17px}
+.hide{display:none}
+</style></head><body><main>
+<div class="bar"><b>Prototype only.</b> Decompression numbers are made-up placeholders so the layout can be tested. Never use for real dives; keep the controlled tables and stopwatches. Data stays on this device.</div>
+<div class="tabs"><button id="t_setup" class="on">Setup</button><button id="t_dive">Dive</button><button id="t_out">Form 288d</button></div>
+
+<section id="v_setup"><div class="card"><label>Location preset<select id="preset"><option value="">None</option></select></label><div class="lbl" id="pnote">Fills in the details that stay the same at that location.</div></div><div class="card"><label>Diving equipment (applies to all divers)<select id="eqp"><option value="">None</option></select></label><div class="lbl" id="enote">Sets the equipment for every diver. You can still change one diver in their own card.</div><datalist id="eqs"></datalist></div><div id="setup"></div>
+<button class="sm" id="addd">Add diver</button><button class="sm" id="newd">New dive (clear everything)</button></section>
+
+<section id="v_dive" class="hide"><div id="cards"></div>
+<h3>Event log</h3><div class="log" id="log"></div>
+<button class="sm" id="clr">Clear dive times only</button></section>
+
+<section id="v_out" class="hide">
+<div class="lbl">Fills in as the dive goes. Layout follows the Form 288d you provided; the original paper form stays the record until this is approved.</div>
+<h3>Page 1</h3><div class="sc"><table id="p1"></table></div>
+<h3>Page 2: dive profile details</h3><div class="sc"><table id="p2" class="p2"></table></div>
+<button class="sm" id="cp">Copy as text (pastes into Word or Excel)</button></section>
+</main><div id="dlg" class="dlg hide"><div><p id="dmsg"></p><button id="dyes" style="background:var(--btn);color:var(--btnink)">Yes</button><button id="dno" style="background:var(--line);color:var(--ink)">Cancel</button></div></div>
+<script>
+// PLACEHOLDER table (fake): [max depth m, no-stop minutes]
+var T=[[9,200],[12,150],[15,75],[18,50],[21,35],[24,25],[27,20],[30,15]];
+var ORDER=['ls','lb','as','lst','sf'],LB={ls:'Left surface',lb:'Leave bottom',as:'Arrived at stop',lst:'Leave stop',sf:'Surfaced'};
+var F=[['serial','Unit serial no','DETAILS'],['page','Page no','DETAILS'],['loc','Location','DETAILS'],['unit','Ship/Craft/Unit','DETAILS'],['task','Task description','DETAILS','a'],['pdepth','Planned depth (m)','DETAILS'],['pdeco','Planned deco','DETAILS'],['type','Type of dive','DETAILS'],['bed','Seabed type','DETAILS'],['ra','Risk assessment number','DETAILS'],['rem','Remarks (unusual incidents/defects)','DETAILS','a'],
+['wx','Weather','ENVIRONMENT'],['sun','Sunrise/Sunset','ENVIRONMENT'],['vis','Surface visibility','ENVIRONMENT'],['wvis','Water visibility','ENVIRONMENT'],['hw','High water (time/height)','ENVIRONMENT'],['lw','Low water (time/height)','ENVIRONMENT'],['range','Tidal range (m)','ENVIRONMENT'],['stream','Tidal stream/current (speed & dir)','ENVIRONMENT'],['air','Air temp (C)','ENVIRONMENT'],['water','Water temp (C)','ENVIRONMENT'],['wind','Wind speed/dir','ENVIRONMENT'],['sea','Sea state','ENVIRONMENT'],
+['plant','Diving equipment and plant maintained, certified, pre-dive inspection complete','SERVICE SUPPORT','c'],['contr','On-site contractors, plant, machinery and equipment','SERVICE SUPPORT'],['comms','Communications plan','SERVICE SUPPORT'],['local','Relevant or local contacts (e.g. KHM, JOC, WSM)','SERVICE SUPPORT'],
+['medp','On-site medically trained personnel','EMERGENCY SUPPORT'],['mede','On-site medical equipment checks completed','EMERGENCY SUPPORT','c'],['cont','DDRMO / INM contacts','EMERGENCY SUPPORT'],['fac','Medical facilities (A&E/clinic)','EMERGENCY SUPPORT'],['cas','Casevac plan','EMERGENCY SUPPORT','a'],['rcc','RCC facilities (confirmed online)','EMERGENCY SUPPORT'],
+['appr','Approval to dive (e.g. project plan, P10s, Op Order ref)','AUTHORISATION'],['auth','Authorising documents (e.g. dispensations, PTW ref)','AUTHORISATION'],
+['lsn','Name','LEAD SUPERVISOR'],['lsr','Rank/Rate','LEAD SUPERVISOR'],['lsd','DTG (signature stays on the paper form)','LEAD SUPERVISOR']];
+var DF=[['name','Divers name'],['rn','Role/number (e.g. TEST, IWI, 1, 2)'],['qual','Diving qual'],['svc','Service no'],['dress',"Diver's dress"],['sup','Supervisor (blank = lead supervisor)'],['equip','Equipment'],['set','Set no'],['main','Main cylinder pressure (start/finish)'],['bail','Bailout cylinder pressure (start/finish)'],['chk','Diver equipment checks completed','c'],['att','Attendant name'],['fa','First aider'],['endur','Predicted endurance air (min)']];
+var S=null;try{S=JSON.parse(localStorage.getItem('dsb2'))}catch(e){}
+if(!S||!S.d)S=fresh();
+function nd(role){return{role:role,depth:parseInt(S&&S.f&&S.f.pdepth)||15}}
+function fresh(){S={f:{},d:[],log:[]};S.d=[nd('standby'),nd('diver'),nd('diver')];return S}
+function save(){try{localStorage.setItem('dsb2',JSON.stringify(S))}catch(e){}}
+function ask(m,ok,no){$('dmsg').textContent=m;$('dlg').classList.remove('hide');$('dyes').onclick=function(){$('dlg').classList.add('hide');ok()};$('dno').onclick=function(){$('dlg').classList.add('hide');if(no)no()}}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function $(i){return document.getElementById(i)}
+function pad(n){return String(n).padStart(2,'0')}
+function lab(i){var d=S.d[i];if(d.role==='standby')return'Standby';var n=0;for(var j=0;j<=i;j++)if(S.d[j].role!=='standby')n++;return'Diver '+n}
+function nm(i){return S.d[i].name||lab(i)}
+function hm4(t){if(!t)return'';var d=new Date(t);return pad(d.getHours())+pad(d.getMinutes())}
+function mn(t){return Math.floor(t/60000)}
+function dtg(t){if(!t)return'';var d=new Date(t),h=-d.getTimezoneOffset()/60,z=['Z','A','B'][h]||'';return pad(d.getDate())+hm4(t)+z+['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()]+pad(d.getFullYear()%100)}
+function fmt(ms){var s=Math.abs(Math.round(ms/1000));return(ms<0?'-':'')+pad(Math.floor(s/60))+':'+pad(s%60)}
+function stopMin(d){if(!d.lb)return 0;var bt=(d.lb-d.ls)/60000,r=T.filter(function(x){return d.depth<=x[0]})[0]||T[T.length-1];return bt<=r[1]?0:Math.max(2,Math.ceil((bt-r[1])/5)*2)}
+function next(d){if(!d.ls)return'ls';if(!d.lb)return'lb';if(!d.sf){if(stopMin(d)>0){if(!d.as)return'as';if(!d.lst)return'lst'}return'sf'}return null}
+function status(d){return!d.ls?'On deck':d.sf?'Surfaced':!d.lb?'In water':(d.as&&!d.lst)?'At stop':'Ascending'}
+function clk(d,now){if(!d.ls)return['--:--','Time in water'];if(d.sf)return[fmt(d.sf-d.ls),'Total dive time'];
+ if(d.as&&!d.lst){var r=stopMin(d)*60000-(now-d.as);return[fmt(r),r<=0?'Stop complete: leave stop':'Stop time remaining']}
+ if(d.lb)return[fmt(now-d.lb),'Time since leaving bottom'];return[fmt(now-d.ls),'Time in water (bottom time so far)']}
+function logit(m){S.log.unshift(new Date().toTimeString().slice(0,8)+'  '+m)}
+function tab(n){['setup','dive','out'].forEach(function(k){$('v_'+k).classList.toggle('hide',k!==n);$('t_'+k).classList.toggle('on',k===n)});if(n==='out')rOut();if(n==='dive')rDive()}
+['setup','dive','out'].forEach(function(k){$('t_'+k).onclick=function(){tab(k)}});
+function rSetup(){var h='',sec='';
+ F.forEach(function(f){if(f[2]!==sec){sec=f[2];h+='<h3>'+sec+'</h3>'}var v=S.f[f[0]];
+  if(f[3]==='c')h+='<label class="chk"><input type="checkbox" data-f="'+f[0]+'" '+(v?'checked':'')+'>'+f[1]+'</label>';
+  else if(f[3]==='a')h+='<label>'+f[1]+'<textarea rows="3" data-f="'+f[0]+'">'+esc(v)+'</textarea></label>';
+  else h+='<label>'+f[1]+'<input data-f="'+f[0]+'" value="'+esc(v)+'"></label>'});
+ h+='<h3>DIVERS (enter before the dive)</h3>';
+ S.d.forEach(function(d,i){h+='<div class="card"><div class="top"><span class="name">'+lab(i)+'</span><button class="sm" onclick="delD('+i+')">Remove</button></div><label>Role<select data-d="'+i+':role"><option value="standby"'+(d.role==='standby'?' selected':'')+'>Standby diver</option><option value="diver"'+(d.role==='diver'?' selected':'')+'>Diver</option></select></label>';
+  DF.forEach(function(f){var v=d[f[0]];h+=f[2]==='c'?'<label class="chk"><input type="checkbox" data-d="'+i+':'+f[0]+'" '+(v?'checked':'')+'>'+f[1]+'</label>':'<label>'+f[1]+'<input data-d="'+i+':'+f[0]+'" value="'+esc(v)+'"'+(f[0]==='equip'?' list="eqs"':'')+'></label>'});
+  h+='</div>'});
+ $('setup').innerHTML=h}
+document.addEventListener('input',function(e){var t=e.target,v=t.type==='checkbox'?t.checked:t.value;
+ if(t.dataset.f){S.f[t.dataset.f]=v}else if(t.dataset.d){var p=t.dataset.d.split(':');S.d[+p[0]][p[1]]=v;if(p[1]==='role'){rSetup()}}else return;save()});
+$('addd').onclick=function(){S.d.push(nd('diver'));save();rSetup()};
+function delD(i){if(S.d.length>1)ask('Remove '+nm(i)+'?',function(){S.d.splice(i,1);save();rSetup();rDive()})}
+$('newd').onclick=function(){ask('Clear all setup, divers and times for a new dive?',function(){fresh();save();rSetup();rDive();rOut()})};
+$('clr').onclick=function(){ask('Clear all dive times and the log? Setup is kept.',function(){S.d.forEach(function(d){ORDER.forEach(function(k){delete d[k]})});S.log=[];save();rDive()})};
+function act(i){var d=S.d[i],k=next(d);if(!k)return;d[k]=Date.now();logit(nm(i)+': '+LB[k]+(k==='lb'?' ('+d.depth+' m, bottom time '+fmt(d.lb-d.ls)+', stop '+stopMin(d)+' min)':''));save();rDive()}
+function undo(i){var d=S.d[i],k;for(var j=4;j>=0;j--){if(d[ORDER[j]]){k=ORDER[j];break}}if(!k)return;delete d[k];logit(nm(i)+': undid '+LB[k]);save();rDive()}
+function dep(i,v){var d=S.d[i];d.depth=Math.min(60,Math.max(1,d.depth+v));save();rDive()}
+function rDive(){var h='';S.d.forEach(function(d,i){var k=next(d),l=k?(d.role==='standby'&&k==='ls'?'Deploy standby':LB[k]):'Dive complete',x=d.lb?'disabled':'';
+ h+='<section class="card" id="c'+i+'"><div class="top"><span class="name">'+esc(nm(i))+(d.name?' <span class="st">('+lab(i)+')</span>':'')+'</span><span class="st" id="s'+i+'"></span></div>'
+ +'<div class="clock" id="k'+i+'"></div><div class="lbl" id="l'+i+'"></div>'
+ +'<div class="row"><div class="info">Bottom time <b>'+(d.lb?fmt(d.lb-d.ls):'--:--')+'</b><br>Stop required <b>'+(d.lb?(stopMin(d)?stopMin(d)+' min':'none'):'--')+'</b></div>'
+ +'<div class="depth"><button class="step" '+x+' onclick="dep('+i+',-1)" aria-label="Shallower">-</button><b>'+d.depth+' m</b><button class="step" '+x+' onclick="dep('+i+',1)" aria-label="Deeper">+</button></div></div>'
+ +'<button class="go" '+(k?'':'disabled')+' onclick="act('+i+')">'+l+'</button><button class="undo" onclick="undo('+i+')">Undo last step</button></section>'});
+ $('cards').innerHTML=h;$('log').innerHTML=S.log.length?S.log.map(function(x){return'<div>'+esc(x)+'</div>'}).join(''):'No events yet.';tick();rOut()}
+function tick(){var now=Date.now();S.d.forEach(function(d,i){var el=$('k'+i);if(!el)return;var c=clk(d,now);el.textContent=c[0];$('l'+i).textContent=c[1];$('s'+i).textContent=status(d);
+ $('c'+i).classList.toggle('alert',!!(d.as&&!d.lst&&!d.sf&&stopMin(d)*60000-(now-d.as)<=0))})}
+setInterval(tick,250);
+function rows(){var starts=S.d.map(function(d){return d.ls}).filter(Boolean),ends=S.d.map(function(d){return d.sf}).filter(Boolean),sd=starts.length?Math.min.apply(null,starts):0,fd=(ends.length&&ends.length===starts.length)?Math.max.apply(null,ends):0;
+ var p1=[['Start date & time (auto)',dtg(sd)],['Finish date & time (auto)',dtg(fd)]];
+ F.forEach(function(f){var v=S.f[f[0]];p1.push([f[1],f[3]==='c'?(v?'\u2612':'\u2610'):(v||'')])});
+ var p2=[['Column',function(d,i){return d.rn||lab(i)}]];
+ DF.forEach(function(f){if(f[0]==='rn')return;p2.push([f[1].replace(' (blank = lead supervisor)',''),function(d){var v=d[f[0]];if(f[0]==='sup'&&!v)return S.f.lsn||'';return f[2]==='c'?(v?'X':''):(v||'')}])});
+ p2.push(['Max depth (m)',function(d){return d.ls?d.depth:''}],['Left surface',function(d){return hm4(d.ls)}],['Left bottom',function(d){return hm4(d.lb)}],
+ ['Duration (min)',function(d){return d.lb?mn(d.lb)-mn(d.ls):''}],['Arrived surface',function(d){return hm4(d.sf)}],['Total time (min)',function(d){return d.sf?mn(d.sf)-mn(d.ls):''}],
+ ['NSD, deco required or simulated stops',function(d){return d.lb?(stopMin(d)?'DECO '+stopMin(d)+' min (placeholder)':'NSD'):''}]);
+ return{p1:p1,p2:p2}}
+function rOut(){var R=rows(),h='';R.p1.forEach(function(r){h+='<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'});$('p1').innerHTML=h;
+ h='';R.p2.forEach(function(r,j){h+='<tr>'+S.d.map(function(d,i){var v=r[1](d,i);return j===0?'<th>'+esc(v)+'</th>':'<td>'+esc(v)+'</td>'}).join('').replace(/^/,(j===0?'<th>':'<td>')+esc(r[0])+(j===0?'</th>':'</td>'))+'</tr>'});$('p2').innerHTML=h}
+$('cp').onclick=function(){var R=rows(),o=['FORM 288d MILITARY DIVING RECORD (prototype)'];R.p1.forEach(function(r){o.push(r[0]+'\t'+r[1])});o.push('');
+ R.p2.forEach(function(r){o.push([r[0]].concat(S.d.map(function(d,i){return r[1](d,i)})).join('\t'))});
+ var t=o.join('\n');try{navigator.clipboard.writeText(t);$('cp').textContent='Copied'}catch(e){$('cp').textContent='Copy blocked: select the tables instead'}setTimeout(function(){$('cp').textContent='Copy as text (pastes into Word or Excel)'},2000)};
+var PRESETS={'DDS (Horsea Island)':{loc:'HORSEA LAKE DDS, HORSEA ISLAND',unit:'DDS',bed:'MUD/SILT',pdeco:'No Stop Diving',hw:'N/A',lw:'N/A',range:'N/A',stream:'N/A',
+comms:'DTWC, Light line signals, Mobile phones, Voice communications, Signal divers',cont:'DDRMO 07827 821980, INM 02392 768020',
+fac:'Minor: HMS Collingwood sick bay, 01329 332204, PO14 1AS. Major: QA Cosham, 02392 286000, PO6 3LY',
+cas:'DTWC, Lifelines, Companion diver drill, Stnby diver drill. DS surface to jetty: recover to W525, strip out, DDRMO, assess, O2, fluids, scribe, keep casualty warm and out of the elements, stretcher, safety vehicle, Coast Guard, 999. Jetty to safety vehicle: stretcher, spare O2, fluids, warm kit, RV with blue light/Coast Guard',
+rcc:'Chichester PO19 6SE 07831151523; Poole BH15 2NN 07785536156',auth:'JSP 286, BRd 2806 IAW Diving LSPEC'}};
+function initPreset(){var s=$('preset');Object.keys(PRESETS).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o)});
+ s.onchange=function(){var P=PRESETS[s.value];if(!P)return;var diff=Object.keys(P).filter(function(k){return S.f[k]&&S.f[k]!==P[k]});
+  function go(){Object.keys(P).forEach(function(k){S.f[k]=P[k]});save();rSetup();$('pnote').textContent='Filled '+Object.keys(P).length+' fields. Check them against the current form. Left blank because they change each dive: serial no, risk assessment, approval to dive, plant and medical equipment checks, supervisor, divers.'}
+  if(diff.length)ask('Overwrite '+diff.length+' fields you have already filled in?',go,function(){s.value=''});else go()}}
+var EQ=['SABA MOD 1','SABA HMV','CDLSE BMA','OSDS'];
+function initEq(){var s=$('eqp'),dl=$('eqs');EQ.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o);var q=document.createElement('option');q.value=k;dl.appendChild(q)});
+ s.onchange=function(){if(!s.value)return;var diff=S.d.filter(function(d){return d.equip&&d.equip!==s.value}).length;
+  function go(){S.d.forEach(function(d){d.equip=s.value});save();rSetup();rOut();$('enote').textContent='Equipment set to '+s.value+' for all divers.'}
+  if(diff)ask('Overwrite equipment already entered for '+diff+' diver(s)?',go,function(){s.value=''});else go()}}
+initEq();initPreset();rSetup();rDive();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+</script></body></html>
